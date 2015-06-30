@@ -1,0 +1,3 @@
+[submodule "typehinting"]
+	path = typehinting
+	url = https://github.com/ambv/typehinting
