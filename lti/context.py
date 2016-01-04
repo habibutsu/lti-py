@@ -32,3 +32,6 @@ class Context:
         binding = TypeVar(new_name)
         self.add_binding(new_name, binding)
         return binding
+
+    def __repr__(self):
+        return "%s" % self._ctx

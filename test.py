@@ -65,7 +65,6 @@ from typing import TypeVar
 T = TypeVar('T')
 
 A = TypeVar('A', str, bytes, covariant=True)
-
         """)
         self.visitor.visit(tree)
         #print(self.visitor.actx)
