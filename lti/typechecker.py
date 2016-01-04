@@ -7,6 +7,8 @@ import os
 
 from typing import *
 
+from lti.context import Context
+
 AST_NODES_TYPES = {
     ast.Dict: dict,
     ast.Set: set,
@@ -27,6 +29,11 @@ def parse_type(node):
         raise NotImplementedError()
 
     if node.func.id == 'TypeVar':
+        """
+        class TypeVar(name, *constraints, bound=None,
+                covariant=False, contravariant=False)
+        """
+        #print(ast.dump(node))
         name = node.args[0].s
         # supports only builtins
         constraints = [
@@ -37,30 +44,6 @@ def parse_type(node):
         return TypeVar(name, *constraints, **kwargs)
 
     raise NotImplementedError()
-
-
-class Context:
-
-    def __init__(self):
-        self._ctx = [{}]
-        self._actx = self._ctx[-1]
-
-    def new_scope():
-        self._ctx.append({})
-        self._actx = self._ctx[-1]
-
-    def end_scope():
-        self._ctx.pop()
-        self._actx = self._ctx[-1]
-
-    def lookup(name):
-        for scope in reversed(self._ctx):
-            if name in scope:
-                return scope[name]
-        return None
-
-    def add_binding(self, name, binding):
-        self._actx[name] = binding
 
 
 class TypingReconstruction(ast.NodeTransformer):
