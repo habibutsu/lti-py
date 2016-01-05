@@ -9,8 +9,17 @@ sys.path.insert(0,
         "typehinting", "prototyping"
     ))
 
+sys.path.insert(0,
+    os.path.join(
+        os.getcwd(),
+        "typehinting", "prototyping"
+    ))
 
-from lti.typechecker import TypeCheck
+
+
+#from lti.typechecker import type_check
+from lti.typechecker import TypeChecker, ErrorException
+import typing
 
 """
 * Type inference of declarations
@@ -47,40 +56,52 @@ from lti.typechecker import TypeCheck
 class InferTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.visitor = TypeCheck()
+        self.type_checker = TypeChecker()
+
+    def test_unbound(self):
+        tree = ast.parse("""x = y""")
+        with self.assertRaises(ErrorException):
+            self.type_checker.visit(tree)
 
     def test_declarations(self):
         tree = ast.parse("""
 x = 10
 y = (1,2,3)
         """)
-        self.visitor.visit(tree)
+        self.type_checker.visit(tree)
+        self.assertIs(self.type_checker.ctx.lookup("x"), int)
+        self.assertIs(self.type_checker.ctx.lookup("y"), tuple)
 
-        #assert('x' in self.visitor.actx)
-        #assert('y' in self.visitor.actx)
-
+    def test_recover_typevar(self):
         tree = ast.parse("""
 from typing import TypeVar
 
 T = TypeVar('T')
-
-A = TypeVar('A', str, bytes, covariant=True)
+U = TypeVar('U', str, bytes, covariant=True)
         """)
-        self.visitor.visit(tree)
-        #print(self.visitor.actx)
+        self.type_checker.visit(tree)
+
+        self.assertIsInstance(
+            self.type_checker.ctx.lookup("T"), typing.TypeVar)
+        self.assertIsInstance(
+            self.type_checker.ctx.lookup("U"), typing.TypeVar)
 
     def test_arguments(self):
         tree = ast.parse("""
-T = TypeVar('T')
+U = TypeVar('T', contravariant=True)
+T = TypeVar('U', int, float)
 
-def foo(a: T, b, c = 105):
-    y = x
-    z = y
-    return x*x
+def foo1(a: TypeVar('T'), b):
+    pass
 
-foo(10, "string")
+def foo2(a: T, b, c = 105) -> U:
+    x = a
+    y = b
+    return x
+
+foo1(10, "string")
         """)
-        self.visitor.visit(tree)
+        #self.visitor.visit(tree)
 
 
 if __name__ == '__main__':
